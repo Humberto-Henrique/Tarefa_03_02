@@ -32,16 +32,16 @@ static uint32_t ultimo_tempo_B = 0;
 ssd1306_t ssd; // Estrutura do display
 
 const uint8_t numeros[10][5] = {
-  {0b11111, 0b10001, 0b10001, 0b10001, 0b11111}, // 0
-  {0b11111, 0b00100, 0b00100, 0b01100, 0b00100}, // 1
-  {0b11111, 0b10000, 0b11111, 0b00001, 0b11111}, // 2
-  {0b11111, 0b00001, 0b11111, 0b00001, 0b11111}, // 3
-  {0b10000, 0b00001, 0b11111, 0b10001, 0b10001}, // 4
-  {0b11111, 0b00001, 0b11111, 0b10000, 0b11111}, // 5
-  {0b11111, 0b10001, 0b11111, 0b10000, 0b11111}, // 6
-  {0b00010, 0b00100, 0b01000, 0b00001, 0b11111}, // 7
-  {0b11111, 0b10001, 0b11111, 0b10001, 0b11111}, // 8
-  {0b11111, 0b00001, 0b11111, 0b10001, 0b11111}  // 9
+  {0b01110, 0b01010, 0b01010, 0b01010, 0b01110}, // 0
+  {0b01110, 0b00100, 0b00100, 0b01100, 0b00100}, // 1
+  {0b01110, 0b01000, 0b01110, 0b00010, 0b01110}, // 2
+  {0b01110, 0b00010, 0b01110, 0b00010, 0b01110}, // 3
+  {0b01000, 0b00010, 0b01110, 0b01010, 0b01010}, // 4
+  {0b01110, 0b00010, 0b01110, 0b01000, 0b01110}, // 5
+  {0b01110, 0b01010, 0b01110, 0b01000, 0b01110}, // 6
+  {0b01000, 0b00010, 0b01000, 0b00010, 0b01110}, // 7
+  {0b01110, 0b01010, 0b01110, 0b01010, 0b01110}, // 8
+  {0b01110, 0b00010, 0b01110, 0b01010, 0b01110}  // 9
 };
 
 // Função para exibir o número na matriz WS2812 5x5
@@ -94,8 +94,8 @@ void __isr_button_pressed(uint gpio, uint32_t eventos) {
 
 
 int ler_caractere_uart() {
-    if (uart_is_readable(uart0)) {  // Verifica se há dados disponíveis no UART0
-        return uart_getc(uart0);  // Lê o caractere do UART0
+    if (stdio_usb_connected()) {  // Verifica se há dados disponíveis no UART0
+        return getchar_timeout_us(0);  // Lê o caractere do UART0
     }
     return -1;  // Retorna -1 se não houver dados
 }
@@ -103,11 +103,6 @@ int ler_caractere_uart() {
 
 int main() {
     stdio_init_all();
-    
-    // Configuração do UART (se ainda não configurado)
-    uart_init(uart0, 9600);  // Inicializa o UART0 a 9600 bauds
-    gpio_set_function(0, GPIO_FUNC_UART); // GPIO 0 como RX
-    gpio_set_function(1, GPIO_FUNC_UART); // GPIO 1 como TX
 
     // Inicializa a interface I2C
     i2c_init(I2C_PORT, 400000);
@@ -155,10 +150,10 @@ int main() {
     ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
 
     while (true) {
-        int caractere = ler_caractere_uart();  // Lê o caractere do UART
+        int caractere = getchar_timeout_us(0);  // Lê o caractere do UART
 
      
-        if (caractere != -1) {  // Se houver um caractere válido
+        if (caractere != PICO_ERROR_TIMEOUT) {  // Se houver um caractere válido
             ssd1306_fill(&ssd, false); // Limpa o display
             char buffer[2] = {(char)caractere, '\0'};  // Cria uma string com o caractere lido
             ssd1306_draw_string(&ssd, "CARACTERE", 30, 0); 
